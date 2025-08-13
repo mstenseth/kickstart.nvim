@@ -1,0 +1,23 @@
+return {
+  {
+    'norcalli/nvim-colorizer.lua',
+    -- event = 'VeryLazy',
+    config = function()
+      require('colorizer').setup {
+        'css',
+        'html',
+        'javascript',
+        'javascriptreact',
+        'typescript',
+        'typescriptreact',
+        'lua',
+        'zig',
+        'json',
+        'jsonc',
+        'yaml',
+        'toml',
+        'markdown',
+      }
+    end,
+  },
+}
