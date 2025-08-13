@@ -27,45 +27,30 @@ local colors = {
   mantle = '#000000', -- Changed to pure black
   crust = '#000000', -- Changed to pure black
 }
+-- Default line number style
+local default_fg = colors.text
+local default_bg = colors.base
+
+local hl = {
+  n = { fg = colors.text },
+  i = { fg = colors.yellow },
+  v = { fg = colors.green },
+  R = { fg = colors.base },
+}
 
 -- vim.cmd.colorscheme 'tokyonight-night'
 -- vim.cmd.colorscheme 'catppuccin-macchiato'
 vim.cmd.colorscheme 'catppuccin_macchiato_black'
--- vim.cmd.colorscheme 'kitty_default'
+vim.opt.numberwidth = 4
+vim.o.path = vim.o.path .. ',**'
+-- for auto-session to work properly
+vim.o.sessionoptions = 'blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions'
 
 require 'lsp'
 require('nvim-treesitter.configs').setup {
   ensure_installed = { 'zig' },
   highlight = { enable = true },
 }
--- vim.g.clipboard = 'osc52'
--- vim.opt.makeprg = 'zig build run'
-vim.keymap.set('n', '<leader>m', ':make<CR>', { desc = 'Run zig build (make)' })
--- vim.keymap.set('n', '<leader>r', ':make run<CR>', { desc = 'Run zig build (make run)' })
--- vim.keymap.set('n', '<leader>w', ':w<CR>', { desc = 'Write file' })
-vim.keymap.set('n', '<leader>a', ':!!<CR>', { desc = 'Rerun last !' })
-
-vim.keymap.set('c', '<C-a>', '<C-b>', { desc = 'Beginning of command line' })
-
--- Default line number style
-local default_fg = colors.text
-local default_bg = colors.base
-
--- local hl = {
---   n = { fg = colors.base, bg = colors.text }, -- normal = white
---   i = { fg = colors.base, bg = colors.yellow }, -- insert = green
---   v = { fg = colors.base, bg = colors.green }, -- visual = orange
---   R = { fg = colors.base, bg = '#FF0000' }, -- replace = red
--- }
-
-local hl = {
-  n = { fg = colors.text }, -- normal = white
-  i = { fg = colors.yellow }, -- insert = green
-  v = { fg = colors.green }, -- visual = orange
-  R = { fg = colors.base }, -- replace = red
-}
-
--- vim.api.nvim_set_hl(0, 'CursorLineNr', { fg = default_fg, bg = default_bg, bold = true })
 
 vim.api.nvim_create_autocmd('ModeChanged', {
   pattern = '*',
@@ -74,13 +59,9 @@ vim.api.nvim_create_autocmd('ModeChanged', {
 
     local style = hl[mode:sub(1, 1)] or { fg = default_fg, bg = default_bg }
 
-    -- vim.api.nvim_set_hl(0, 'LineNr', { fg = style.fg, bg = style.bg })
-    -- vim.api.nvim_set_hl(0, 'CursorLineNr', { fg = style.fg, bg = style.bg, bold = true })
-
     vim.api.nvim_set_hl(0, 'CursorLineNr', { fg = style.fg, bg = style.bg, bold = true })
   end,
 })
-vim.opt.numberwidth = 4
 
 vim.api.nvim_create_user_command('OpenGLDoc', function()
   local word = vim.fn.expand '<cword>'
@@ -96,10 +77,6 @@ vim.keymap.set('n', '<leader>sc', function()
   }
 end, { desc = '[S]earch [C]onfig files' })
 
-vim.o.path = vim.o.path .. ',**'
--- for auto-session to work properly
-vim.o.sessionoptions = 'blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions'
-
 local function goto_definition_below()
   if vim.fn.winnr '$' == 1 then
     vim.cmd 'split'
@@ -109,16 +86,12 @@ local function goto_definition_below()
   vim.lsp.buf.definition()
 end
 
--- vim.keymap.set('n', '<leader>gd', goto_definition_below, { desc = 'Go to definition (smart)' })
+vim.keymap.set('n', '<leader>m', ':make<CR>', { desc = 'Run zig build (make)' })
+vim.keymap.set('n', '<leader>a', ':!!<CR>', { desc = 'Rerun last !' })
+vim.keymap.set('c', '<C-a>', '<C-b>', { desc = 'Beginning of command line' })
 vim.keymap.set('n', '<leader>go', ':OpenGLDoc<CR>', { desc = 'Open OpenGL doc for symbol under cursor' })
--- vim.keymap.set('n', '<leader>th', ':Telescope themes<CR>', { noremap = true, silent = true, desc = 'Theme Switcher' })
+vim.keymap.set('n', '<leader>gd', goto_definition_below, { desc = 'Go to definition below' })
 
 print '🔥 Custom config loaded!'
 
-vim.api.nvim_create_autocmd('VimEnter', {
-  pattern = '*',
-  callback = function()
-    -- vim.cmd 'ColorizerReloadAllBuffers'
-  end,
-})
 return {}
