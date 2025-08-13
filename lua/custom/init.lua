@@ -86,7 +86,7 @@ vim.api.nvim_create_user_command('OpenGLDoc', function()
   local word = vim.fn.expand '<cword>'
   local base = word:gsub('%d.*$', '') -- strip from first digit onwards
   local url = 'https://docs.gl/gl4/gl' .. base
-  vim.fn.jobstart({ 'xdg-open', url }, { dtach = true })
+  vim.fn.jobstart({ 'xdg-open', url }, { detach = true })
 end, {})
 
 local builtin = require 'telescope.builtin'
