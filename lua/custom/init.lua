@@ -1,9 +1,43 @@
+local colors = {
+  -- Catppuccin Macchiato palette
+  rosewater = '#f4dbd6',
+  flamingo = '#f0c6c6',
+  pink = '#f5bde6',
+  mauve = '#c6a0f6',
+  red = '#ed8796',
+  maroon = '#ee99a0',
+  peach = '#f5a97f',
+  yellow = '#eed49f',
+  green = '#a6da95',
+  teal = '#8bd5ca',
+  sky = '#91d7e3',
+  sapphire = '#7dc4e4',
+  blue = '#8aadf4',
+  lavender = '#b7bdf8',
+  text = '#cad3f5',
+  subtext1 = '#b8c0e0',
+  subtext0 = '#a5adcb',
+  overlay2 = '#939ab7',
+  overlay1 = '#8087a2',
+  overlay0 = '#6e738d',
+  surface2 = '#5b6078',
+  surface1 = '#494d64',
+  surface0 = '#363a4f',
+  base = '#000000', -- Changed to pure black
+  mantle = '#000000', -- Changed to pure black
+  crust = '#000000', -- Changed to pure black
+}
+
+-- vim.cmd.colorscheme 'tokyonight-night'
+-- vim.cmd.colorscheme 'catppuccin-macchiato'
+vim.cmd.colorscheme 'catppuccin_macchiato_black'
+-- vim.cmd.colorscheme 'kitty_default'
+
 require 'lsp'
 require('nvim-treesitter.configs').setup {
   ensure_installed = { 'zig' },
   highlight = { enable = true },
 }
-
 -- vim.g.clipboard = 'osc52'
 -- vim.opt.makeprg = 'zig build run'
 vim.keymap.set('n', '<leader>m', ':make<CR>', { desc = 'Run zig build (make)' })
@@ -11,60 +45,80 @@ vim.keymap.set('n', '<leader>m', ':make<CR>', { desc = 'Run zig build (make)' })
 -- vim.keymap.set('n', '<leader>w', ':w<CR>', { desc = 'Write file' })
 vim.keymap.set('n', '<leader>a', ':!!<CR>', { desc = 'Rerun last !' })
 
+vim.keymap.set('c', '<C-a>', '<C-b>', { desc = 'Beginning of command line' })
+
+-- Default line number style
+local default_fg = colors.text
+local default_bg = colors.base
+
+-- local hl = {
+--   n = { fg = colors.base, bg = colors.text }, -- normal = white
+--   i = { fg = colors.base, bg = colors.yellow }, -- insert = green
+--   v = { fg = colors.base, bg = colors.green }, -- visual = orange
+--   R = { fg = colors.base, bg = '#FF0000' }, -- replace = red
+-- }
+
+local hl = {
+  n = { fg = colors.text }, -- normal = white
+  i = { fg = colors.yellow }, -- insert = green
+  v = { fg = colors.green }, -- visual = orange
+  R = { fg = colors.base }, -- replace = red
+}
+
+-- vim.api.nvim_set_hl(0, 'CursorLineNr', { fg = default_fg, bg = default_bg, bold = true })
+
 vim.api.nvim_create_autocmd('ModeChanged', {
   pattern = '*',
   callback = function()
     local mode = vim.fn.mode()
 
-    -- Default line number style
-    local default_fg = '#888888'
-    local default_bg = '#1e1e1e'
-
-    local hl = {
-      n = { fg = '#15161E', bg = '#7AA2F7' }, -- normal = white
-      i = { fg = '#15161E', bg = '#9ECE6A' }, -- insert = green
-      v = { fg = '#15161E', bg = '#BB9AF7' }, -- visual = orange
-      R = { fg = '#15161E', bg = '#FF0000' }, -- replace = red
-    }
-
     local style = hl[mode:sub(1, 1)] or { fg = default_fg, bg = default_bg }
 
-    vim.api.nvim_set_hl(0, 'LineNr', { fg = style.fg, bg = style.bg })
+    -- vim.api.nvim_set_hl(0, 'LineNr', { fg = style.fg, bg = style.bg })
+    -- vim.api.nvim_set_hl(0, 'CursorLineNr', { fg = style.fg, bg = style.bg, bold = true })
+
     vim.api.nvim_set_hl(0, 'CursorLineNr', { fg = style.fg, bg = style.bg, bold = true })
   end,
 })
+vim.opt.numberwidth = 4
 
 vim.api.nvim_create_user_command('OpenGLDoc', function()
   local word = vim.fn.expand '<cword>'
   local base = word:gsub('%d.*$', '') -- strip from first digit onwards
   local url = 'https://docs.gl/gl4/gl' .. base
-  vim.fn.jobstart({ 'xdg-open', url }, { detach = true })
+  vim.fn.jobstart({ 'xdg-open', url }, { dtach = true })
 end, {})
-
-vim.keymap.set('n', '<leader>gd', ':OpenGLDoc<CR>', { desc = 'Open OpenGL doc for symbol under cursor' })
 
 local builtin = require 'telescope.builtin'
 vim.keymap.set('n', '<leader>sc', function()
-  builtin.find_files { search_dirs = { '~/.config/' } }
-end, { desc = '[S]earch [C]eovim files' })
+  builtin.find_files {
+    search_dirs = { '~/.config/' },
+  }
+end, { desc = '[S]earch [C]onfig files' })
 
-local telescope = require 'telescope'
--- Grab the original setup from the plugin
-local existing = require('telescope.config').values
+vim.o.path = vim.o.path .. ',**'
+-- for auto-session to work properly
+vim.o.sessionoptions = 'blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions'
 
--- Extend or override just the pickers
-telescope.setup {
-  defaults = existing.defaults,
-  extensions = existing.extensions,
-  pickers = vim.tbl_deep_extend('force', existing.pickers or {}, {
-    buffers = {
-      sort_mru = true,
-      ignore_current_buffer = true,
-      previewer = true,
-    },
-  }),
-}
+local function goto_definition_below()
+  if vim.fn.winnr '$' == 1 then
+    vim.cmd 'split'
+  else
+    vim.cmd 'wincmd j'
+  end
+  vim.lsp.buf.definition()
+end
+
+-- vim.keymap.set('n', '<leader>gd', goto_definition_below, { desc = 'Go to definition (smart)' })
+vim.keymap.set('n', '<leader>go', ':OpenGLDoc<CR>', { desc = 'Open OpenGL doc for symbol under cursor' })
+-- vim.keymap.set('n', '<leader>th', ':Telescope themes<CR>', { noremap = true, silent = true, desc = 'Theme Switcher' })
 
 print '🔥 Custom config loaded!'
 
+vim.api.nvim_create_autocmd('VimEnter', {
+  pattern = '*',
+  callback = function()
+    -- vim.cmd 'ColorizerReloadAllBuffers'
+  end,
+})
 return {}
