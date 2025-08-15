@@ -24,9 +24,12 @@ local colors = {
   surface2 = '#5b6078',
   surface1 = '#494d64',
   surface0 = '#363a4f',
-  base = '#000000', -- Changed to pure black
-  mantle = '#000000', -- Changed to pure black
-  crust = '#000000', -- Changed to pure black
+  base = '#0D1117', -- Changed to pure black
+  mantle = '#0D1117', -- Changed to pure black
+  crust = '#0D1117', -- Changed to pure black
+  -- base = '#000000', -- Changed to pure black
+  -- mantle = '#000000', -- Changed to pure black
+  -- crust = '#000000', -- Changed to pure black
 }
 
 -- Clear existing highlights and set colorscheme name
