@@ -92,7 +92,12 @@ vim.keymap.set('c', '<C-a>', '<C-b>', { desc = 'Beginning of command line' })
 vim.keymap.set('n', '<leader>go', ':OpenGLDoc<CR>', { desc = 'Open OpenGL doc for symbol under cursor' })
 vim.keymap.set('n', '<leader>gd', goto_definition_below, { desc = 'Go to definition below' })
 vim.keymap.set('n', '<leader>;', '<ESC>A;<ESC>', { desc = 'Insert semicolon at end of line' })
-
+vim.api.nvim_set_keymap(
+  'n',
+  '<leader>ff',
+  ':lua require("telescope.builtin").find_files({ hidden = true, no_ignore = false })<CR>',
+  { noremap = true, silent = true }
+)
 print '🔥 Custom config loaded!'
 
 return {}
