@@ -35,7 +35,7 @@ local hl = {
   n = { fg = colors.text },
   i = { fg = colors.yellow },
   v = { fg = colors.green },
-  R = { fg = colors.base },
+  R = { fg = colors.red },
 }
 
 -- vim.cmd.colorscheme 'tokyonight-night'
@@ -56,6 +56,7 @@ vim.api.nvim_create_autocmd('ModeChanged', {
   pattern = '*',
   callback = function()
     local mode = vim.fn.mode()
+    print('mode:' .. mode)
 
     local style = hl[mode:sub(1, 1)] or { fg = default_fg, bg = default_bg }
 
@@ -87,17 +88,86 @@ local function goto_definition_below()
 end
 
 vim.keymap.set('n', '<leader>m', ':make<CR>', { desc = 'Run zig build (make)' })
-vim.keymap.set('n', '<leader>a', ':!!<CR>', { desc = 'Rerun last !' })
+vim.keymap.set('n', '<leader>r', ':!!<CR>', { desc = 'Rerun last !' })
 vim.keymap.set('c', '<C-a>', '<C-b>', { desc = 'Beginning of command line' })
 vim.keymap.set('n', '<leader>go', ':OpenGLDoc<CR>', { desc = 'Open OpenGL doc for symbol under cursor' })
 vim.keymap.set('n', '<leader>gd', goto_definition_below, { desc = 'Go to definition below' })
 vim.keymap.set('n', '<leader>;', '<ESC>A;<ESC>', { desc = 'Insert semicolon at end of line' })
+vim.keymap.set('n', '<leader>a', '<C-a>', { desc = 'Increment number' })
+vim.keymap.set('n', '<leader>x', '<C-x>', { desc = 'Decrement number' })
+vim.keymap.set('n', '<leader>dp', function()
+  -- Try to get a larger expression by expanding selection
+  local function get_expression_under_cursor()
+    -- Save current position
+    local pos = vim.api.nvim_win_get_cursor(0)
+    
+    -- Try to expand selection to get full expression
+    -- This is a heuristic approach: look for common patterns
+    local line = vim.api.nvim_get_current_line()
+    local col = pos[2]
+    
+    -- Find the start of the expression (walk backwards)
+    local start_col = col
+    while start_col > 0 do
+      local char = line:sub(start_col, start_col)
+      if char:match('[%w_.]') then
+        start_col = start_col - 1
+      else
+        start_col = start_col + 1
+        break
+      end
+    end
+    
+    -- Find the end of the expression (walk forwards)
+    local end_col = col + 1
+    while end_col <= #line do
+      local char = line:sub(end_col, end_col)
+      if char:match('[%w_.]') then
+        end_col = end_col + 1
+      else
+        break
+      end
+    end
+    
+    -- Extract the expression
+    if start_col <= end_col then
+      return line:sub(start_col, end_col - 1)
+    end
+    
+    -- Fallback
+    return vim.fn.expand("<cword>")
+  end
+  
+  local expr = get_expression_under_cursor()
+  local line = 'std.debug.print("' .. expr .. ' = {}\\n", .{' .. expr .. '});'
+  vim.api.nvim_put({line}, 'l', true, true)
+end, { desc = 'Debug print expression under cursor' })
 vim.api.nvim_set_keymap(
   'n',
   '<leader>ff',
   ':lua require("telescope.builtin").find_files({ hidden = true, no_ignore = false })<CR>',
   { noremap = true, silent = true }
 )
-print '🔥 Custom config loaded!'
+
+-- Auto reload files when focus is gained (if terminal supports focus events)
+vim.api.nvim_create_autocmd({ 'FocusGained', 'BufEnter', 'CursorHold', 'CursorHoldI', 'CursorMoved', 'CursorMovedI' }, {
+  desc = 'Auto reload files on various events',
+  pattern = '*',
+  callback = function()
+    if vim.fn.mode() ~= 'c' then
+      vim.cmd 'silent! checktime'
+    end
+  end,
+})
+
+require 'blink.cmp'
+
+-- Load custom snippets
+require('luasnip.loaders.from_lua').load { paths = '~/.config/nvim/lua/custom/snippets' }
+function foo()
+  print 'foo'
+end
+
+print '📁 Auto-reload on focus enabled!'
 
 return {}
