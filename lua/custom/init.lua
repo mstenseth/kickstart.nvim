@@ -39,8 +39,8 @@ local hl = {
 }
 
 -- vim.cmd.colorscheme 'tokyonight-night'
--- vim.cmd.colorscheme 'catppuccin-macchiato'
-vim.cmd.colorscheme 'catppuccin_macchiato_black'
+vim.cmd.colorscheme 'catppuccin-mocha'
+-- vim.cmd.colorscheme 'catppuccin_macchiato_black'
 vim.opt.numberwidth = 4
 vim.o.path = vim.o.path .. ',**'
 -- for auto-session to work properly
@@ -100,47 +100,47 @@ vim.keymap.set('n', '<leader>dp', function()
   local function get_expression_under_cursor()
     -- Save current position
     local pos = vim.api.nvim_win_get_cursor(0)
-    
+
     -- Try to expand selection to get full expression
     -- This is a heuristic approach: look for common patterns
     local line = vim.api.nvim_get_current_line()
     local col = pos[2]
-    
+
     -- Find the start of the expression (walk backwards)
     local start_col = col
     while start_col > 0 do
       local char = line:sub(start_col, start_col)
-      if char:match('[%w_.]') then
+      if char:match '[%w_.]' then
         start_col = start_col - 1
       else
         start_col = start_col + 1
         break
       end
     end
-    
+
     -- Find the end of the expression (walk forwards)
     local end_col = col + 1
     while end_col <= #line do
       local char = line:sub(end_col, end_col)
-      if char:match('[%w_.]') then
+      if char:match '[%w_.]' then
         end_col = end_col + 1
       else
         break
       end
     end
-    
+
     -- Extract the expression
     if start_col <= end_col then
       return line:sub(start_col, end_col - 1)
     end
-    
+
     -- Fallback
-    return vim.fn.expand("<cword>")
+    return vim.fn.expand '<cword>'
   end
-  
+
   local expr = get_expression_under_cursor()
   local line = 'std.debug.print("' .. expr .. ' = {}\\n", .{' .. expr .. '});'
-  vim.api.nvim_put({line}, 'l', true, true)
+  vim.api.nvim_put({ line }, 'l', true, true)
 end, { desc = 'Debug print expression under cursor' })
 vim.api.nvim_set_keymap(
   'n',
