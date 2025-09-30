@@ -87,7 +87,7 @@ local function goto_definition_below()
   vim.lsp.buf.definition()
 end
 
-vim.keymap.set('n', '<leader>m', ':make<CR>', { desc = 'Run zig build (make)' })
+vim.keymap.set('n', '<leader>m', ':WMake<CR>', { desc = 'Save current file and make' })
 vim.keymap.set('n', '<leader>r', ':!!<CR>', { desc = 'Rerun last !' })
 vim.keymap.set('c', '<C-a>', '<C-b>', { desc = 'Beginning of command line' })
 vim.keymap.set('n', '<leader>go', ':OpenGLDoc<CR>', { desc = 'Open OpenGL doc for symbol under cursor' })
@@ -164,9 +164,11 @@ require 'blink.cmp'
 
 -- Load custom snippets
 require('luasnip.loaders.from_lua').load { paths = '~/.config/nvim/lua/custom/snippets' }
-function foo()
-  print 'foo'
-end
+
+vim.api.nvim_create_user_command('WMake', function()
+  vim.cmd.write()
+  vim.cmd.make()
+end, { desc = 'Save and run make' })
 
 print '📁 Auto-reload on focus enabled!'
 
