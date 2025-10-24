@@ -412,6 +412,16 @@ require('lazy').setup({
         --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
         --   },
         -- },
+        defaults = {
+          color_devicons = true,
+          layout_strategy = 'horizontal',
+          layout_config = {
+            height = 0.99,
+            width = 0.99,
+            prompt_position = 'bottom',
+            preview_cutoff = 40,
+          },
+        },
         pickers = {
           buffers = {
             sort_mru = true,

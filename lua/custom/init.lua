@@ -1,3 +1,11 @@
+-- vim.cmd.colorscheme 'tokyonight-night'
+vim.cmd.colorscheme 'catppuccin-mocha'
+-- vim.cmd.colorscheme 'catppuccin_macchiato_black'
+vim.opt.numberwidth = 4
+vim.o.path = vim.o.path .. ',**'
+-- for auto-session to work properly
+vim.o.sessionoptions = 'blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions'
+
 local colors = {
   -- Catppuccin Macchiato palette
   rosewater = '#f4dbd6',
@@ -38,18 +46,21 @@ local hl = {
   R = { fg = colors.red },
 }
 
--- vim.cmd.colorscheme 'tokyonight-night'
-vim.cmd.colorscheme 'catppuccin-mocha'
--- vim.cmd.colorscheme 'catppuccin_macchiato_black'
-vim.opt.numberwidth = 4
-vim.o.path = vim.o.path .. ',**'
--- for auto-session to work properly
-vim.o.sessionoptions = 'blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions'
+local function expand_env(s)
+  return (s:gsub('%$(%w+)', os.getenv))
+end
 
 require 'lsp'
 require('nvim-treesitter.configs').setup {
   ensure_installed = { 'zig' },
   highlight = { enable = true },
+}
+
+require('lspconfig').zls.setup {
+  cmd = { expand_env '$HOME/.zvm/bin/zls' },
+  settings = {
+    semantic_tokens = 'partial',
+  },
 }
 
 vim.api.nvim_create_autocmd('ModeChanged', {
@@ -71,13 +82,6 @@ vim.api.nvim_create_user_command('OpenGLDoc', function()
   vim.fn.jobstart({ 'xdg-open', url }, { detach = true })
 end, {})
 
-local builtin = require 'telescope.builtin'
-vim.keymap.set('n', '<leader>sc', function()
-  builtin.find_files {
-    search_dirs = { '~/.config/' },
-  }
-end, { desc = '[S]earch [C]onfig files' })
-
 local function goto_definition_below()
   if vim.fn.winnr '$' == 1 then
     vim.cmd 'split'
@@ -87,15 +91,7 @@ local function goto_definition_below()
   vim.lsp.buf.definition()
 end
 
-vim.keymap.set('n', '<leader>m', ':WMake<CR>', { desc = 'Save current file and make' })
-vim.keymap.set('n', '<leader>r', ':!!<CR>', { desc = 'Rerun last !' })
-vim.keymap.set('c', '<C-a>', '<C-b>', { desc = 'Beginning of command line' })
-vim.keymap.set('n', '<leader>go', ':OpenGLDoc<CR>', { desc = 'Open OpenGL doc for symbol under cursor' })
-vim.keymap.set('n', '<leader>gd', goto_definition_below, { desc = 'Go to definition below' })
-vim.keymap.set('n', '<leader>;', '<ESC>A;<ESC>', { desc = 'Insert semicolon at end of line' })
-vim.keymap.set('n', '<leader>a', '<C-a>', { desc = 'Increment number' })
-vim.keymap.set('n', '<leader>x', '<C-x>', { desc = 'Decrement number' })
-vim.keymap.set('n', '<leader>dp', function()
+local function debug_print_expression_under_cursor()
   -- Try to get a larger expression by expanding selection
   local function get_expression_under_cursor()
     -- Save current position
@@ -141,13 +137,7 @@ vim.keymap.set('n', '<leader>dp', function()
   local expr = get_expression_under_cursor()
   local line = 'std.debug.print("' .. expr .. ' = {}\\n", .{' .. expr .. '});'
   vim.api.nvim_put({ line }, 'l', true, true)
-end, { desc = 'Debug print expression under cursor' })
-vim.api.nvim_set_keymap(
-  'n',
-  '<leader>ff',
-  ':lua require("telescope.builtin").find_files({ hidden = true, no_ignore = false })<CR>',
-  { noremap = true, silent = true }
-)
+end
 
 -- Auto reload files when focus is gained (if terminal supports focus events)
 vim.api.nvim_create_autocmd({ 'FocusGained', 'BufEnter', 'CursorHold', 'CursorHoldI', 'CursorMoved', 'CursorMovedI' }, {
@@ -160,16 +150,39 @@ vim.api.nvim_create_autocmd({ 'FocusGained', 'BufEnter', 'CursorHold', 'CursorHo
   end,
 })
 
-require 'blink.cmp'
-
--- Load custom snippets
-require('luasnip.loaders.from_lua').load { paths = '~/.config/nvim/lua/custom/snippets' }
-
 vim.api.nvim_create_user_command('WMake', function()
   vim.cmd.write()
   vim.cmd.make()
 end, { desc = 'Save and run make' })
 
-print '📁 Auto-reload on focus enabled!'
+local builtin = require 'telescope.builtin'
+
+local function telescope_search_config_files()
+  builtin.find_files {
+    search_dirs = { '~/.config/' },
+  }
+end
+
+local function telecope_find_all_files()
+  builtin.find_files {
+    hidden = true,
+    ignore = false,
+  }
+end
+
+require 'blink.cmp'
+require('luasnip.loaders.from_lua').load { paths = '~/.config/nvim/lua/custom/snippets' }
+
+vim.keymap.set('n', '<leader>m', ':WMake<CR>', { desc = 'Save current file and make' })
+vim.keymap.set('n', '<leader>r', ':!!<CR>', { desc = 'Rerun last !' })
+vim.keymap.set('c', '<C-a>', '<C-b>', { desc = 'Beginning of command line' })
+vim.keymap.set('n', '<leader>go', ':OpenGLDoc<CR>', { desc = 'Open OpenGL doc for symbol under cursor' })
+vim.keymap.set('n', '<leader>gd', goto_definition_below, { desc = 'Go to definition below' })
+vim.keymap.set('n', '<leader>;', '<ESC>A;<ESC>', { desc = 'Insert semicolon at end of line' })
+vim.keymap.set('n', '<leader>a', '<C-a>', { desc = 'Increment number' })
+vim.keymap.set('n', '<leader>x', '<C-x>', { desc = 'Decrement number' })
+vim.keymap.set('n', '<leader>dp', debug_print_expression_under_cursor, { desc = 'Debug print expression under cursor' })
+vim.keymap.set('n', '<leader>sc', telescope_search_config_files, { desc = '[S]earch [C]onfig files' })
+vim.keymap.set('n', '<leader>ff', telecope_find_all_files, { desc = 'Find all files including hidden except ignored' })
 
 return {}
